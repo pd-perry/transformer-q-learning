@@ -27,8 +27,8 @@ plt.rcParams.update({
     "legend.fontsize": 9,
     "xtick.labelsize": 10,
     "ytick.labelsize": 10,
-    "figure.dpi": 150,
-    "savefig.dpi": 150,
+    "figure.dpi": 600,
+    "savefig.dpi": 600,
     "axes.linewidth": 1.0,
     "lines.linewidth": 2.0,
     "xtick.major.pad": 2,
@@ -238,7 +238,7 @@ def animate(frame):
         # Invisible 2-line text to create correctly sized box
         t_box = ax.text(
             0.05, 0.93,
-            "Prior methods: ~10% avg. decrease\nTQL: +43% improvement",
+            "Prior methods: 10% avg. decrease\nTQL: +43% improvement",
             transform=ax.transAxes,
             fontsize=10, fontweight='bold',
             ha='left', va='top',
@@ -257,7 +257,7 @@ def animate(frame):
         # Grey first line (same position as invisible text)
         t_grey = ax.text(
             0.05, 0.93,
-            "Prior methods: ~10% avg. decrease",
+            "Prior methods: 10% avg. decrease",
             transform=ax.transAxes,
             fontsize=10, fontweight='bold',
             ha='left', va='top',

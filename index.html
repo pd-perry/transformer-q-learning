@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TQL: Scaling Q-Functions with Transformers by Preventing Attention Collapse</title>
+    <meta name="description" content="TQL enables scaling of transformer-based value functions in reinforcement learning by preventing attention entropy collapse, achieving up to 43% performance improvement.">
+
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+    <style>
+        :root {
+            --link-color: #E67E22;
+            --divider-color: #e5e5e5;
+            --accent-color: #E67E22;
+        }
+
+        body {
+            font-family: 'Noto Sans', sans-serif;
+            background: #ffffff;
+        }
+
+        .publication-title {
+            font-family: 'Google Sans', sans-serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            line-height: 1.2;
+        }
+
+        .publication-authors,
+        .publication-venue {
+            font-family: 'Google Sans', sans-serif;
+        }
+
+        .publication-authors a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .publication-authors a:hover {
+            text-decoration: underline;
+        }
+
+        .author-block {
+            display: inline-block;
+            margin: 0 0.25rem;
+        }
+
+        .publication-venue {
+            color: #555;
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+
+        .link-block a {
+            margin: 0.25rem;
+        }
+
+        .section {
+            padding: 0.75rem 1.5rem;
+        }
+
+        .section.compact {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+
+        .section.compact > *:last-child {
+            margin-bottom: 0;
+        }
+
+        .container.is-max-desktop {
+            max-width: 960px;
+        }
+
+        h2.title.is-3 {
+            font-family: 'Google Sans', sans-serif;
+            margin-top: 0.1rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .content {
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        .content.has-text-justified {
+            text-align: justify;
+        }
+
+        .publication-image {
+            margin: 0.75rem 0;
+        }
+
+        .publication-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .publication-image .caption {
+            font-style: italic;
+            color: #555;
+            font-size: 0.92rem;
+            margin-top: 0.75rem;
+            line-height: 1.5;
+        }
+
+        hr {
+            background-color: var(--divider-color);
+            height: 2px;
+            border: none;
+            border-radius: 5px;
+            margin: 0.75rem 0;
+        }
+
+        .hero.is-light {
+            background: #ffffff;
+        }
+
+        .hero-body {
+            padding: 3rem 1.5rem 1.5rem;
+        }
+
+        .equal-contrib {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        /* Key ideas styling */
+        .key-idea {
+            margin: 0.75rem 0;
+            padding: 0;
+        }
+
+        .key-idea strong {
+            color: var(--accent-color);
+        }
+
+        /* Bibtex */
+        .bibtex-box {
+            background: #f8f8f8;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre;
+            color: #333;
+        }
+
+        /* Buttons */
+        .button.is-rounded {
+            font-family: 'Google Sans', sans-serif;
+            font-weight: 500;
+        }
+
+        .button.is-dark {
+            background-color: var(--accent-color);
+        }
+
+        .button.is-dark:hover {
+            background-color: #cf6d17;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 2rem 1.5rem;
+            background: #fafafa;
+        }
+
+        .footer .content {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .publication-title {
+                font-size: 1.6rem;
+            }
+            .hero-body {
+                padding: 2rem 1rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Hero / Header -->
+<section class="hero is-light">
+    <div class="hero-body">
+        <div class="container is-max-desktop has-text-centered">
+            <h1 class="publication-title">
+                <span style="color: #E67E22;">TQL</span>: Scaling Q-Functions with Transformers<br>by Preventing Attention Collapse
+            </h1>
+
+            <div class="publication-authors" style="margin-top: 1.25rem; font-size: 1.15rem;">
+                <span class="author-block"><a href="https://dblp.org/pid/323/8972.html" target="_blank">Perry Dong</a><sup>*</sup>,</span>
+                <span class="author-block"><a href="https://khhung-906.github.io/" target="_blank">Kuo-Han Hung</a><sup>*</sup>,</span>
+                <span class="author-block"><a href="https://aswerdlow.com/" target="_blank">Alexander Swerdlow</a>,</span>
+                <span class="author-block"><a href="https://dorsa.fyi/" target="_blank">Dorsa Sadigh</a>,</span>
+                <span class="author-block"><a href="https://ai.stanford.edu/~cbfinn/" target="_blank">Chelsea Finn</a></span>
+            </div>
+
+            <div class="publication-venue" style="margin-top: 0.5rem;">
+                Stanford University
+            </div>
+            <div class="equal-contrib" style="margin-top: 0.25rem;">* Equal contribution</div>
+
+            <!-- Links -->
+            <div class="link-block" style="margin-top: 1.25rem;">
+                <a class="button is-dark is-rounded" href="static/scaling_q_function.pdf" target="_blank">
+                    <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="currentColor" width="16" height="16"><path d="M64 0C28.7 0 0 28.7 0 64v384c0 35.3 28.7 64 64 64h256c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14.3-32-32V0H64zm192 0v128h128L256 0zM112 256h160c8.8 0 16 7.1 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16zm0 64h160c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16zm0 64h160c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16z"/></svg></span>
+                    <span>Paper</span>
+                </a>
+                <a class="button is-dark is-rounded" href="https://arxiv.org/" target="_blank">
+                    <span class="icon"><i class="ai ai-arxiv"></i></span>
+                    <span>arXiv</span>
+                </a>
+                <a class="button is-dark is-rounded" href="https://github.com/" target="_blank">
+                    <span class="icon"><i class="fab fa-github"></i></span>
+                    <span>Code</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Teaser Figure -->
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <div class="publication-image">
+            <img src="static/figures/scale_animated.gif" alt="TQL scaling results showing performance improvement as network size increases, while prior methods degrade." style="width: 85%; display: block; margin: 0 auto;">
+            <p class="caption">
+                <strong>TQL unlocks scaling of value functions in RL.</strong>
+                Scaling results of TQL compared with prior approaches across critic model sizes from 0.4M to 26M parameters. While prior methods suffer from up to ~10% average performance degradation when scaling up, TQL achieves a 43% improvement, demonstrating consistent and effective scaling.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <hr>
+    </div>
+</section>
+
+<!-- Abstract -->
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+            <p>
+                Despite scale driving substantial recent advancements in machine learning, reinforcement learning (RL) methods still primarily use small value functions. Naively scaling value functions &mdash; including with a transformer architecture, which is known to be highly scalable &mdash; often results in learning instability and <em>worse</em> performance. In this work, we ask: <em>what prevents transformers from scaling effectively for value functions?</em> Through empirical analysis, we identify the critical failure mode in this scaling: attention scores collapse as capacity increases. Our key insight is that we can effectively prevent this collapse and stabilize training by controlling the entropy of the attention scores, thereby enabling the use of larger models. To this end, we propose Transformer Q-Learning (TQL), a method that unlocks the scaling potential of transformers in learning value functions in RL. Our approach yields up to a <strong>43% improvement</strong> in performance when scaling from the smallest to the largest network sizes, while prior methods suffer from performance degradation.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <hr>
+    </div>
+</section>
+
+<!-- Key Ideas -->
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <h2 class="title is-3">Key Ideas</h2>
+        <div class="content">
+            <div class="key-idea">
+                <p><strong>&#x1F50D; Attention Collapse:</strong> We identify the critical failure mode when scaling transformers for value function learning &mdash; attention entropy collapses as model capacity increases, causing the model to attend to only a handful of tokens and producing non-smooth value surfaces.</p>
+            </div>
+            <div class="key-idea">
+                <p><strong>&#x1F3AF; Entropy-Guided Training:</strong> TQL introduces per-layer learnable temperature parameters to control the entropy of attention scores toward a target value, preventing collapse and enabling stable training at scale.</p>
+            </div>
+            <div class="key-idea">
+                <p><strong>&#x1F4C8; Effective Scaling:</strong> While prior methods suffer from up to 10.6% average performance degradation when scaling up, TQL achieves a 43% improvement from the smallest (0.4M) to the largest (26M) model, demonstrating consistent and effective scaling.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <hr>
+    </div>
+</section>
+
+<!-- Analysis -->
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <h2 class="title is-3">Why Do Transformers Fail to Scale for Value Functions?</h2>
+        <div class="content has-text-justified">
+            <p>
+                Contrary to typical scaling trends in language and vision, we observe a strong <em>negative scaling pattern</em> for transformer-based value functions: performance degrades with increased model size. To diagnose this, we analyze Q-value landscapes and attention distributions across network scales. Larger networks produce non-smooth value surfaces with high-frequency oscillations, and attention entropy decreases substantially, indicating increasingly peaked and brittle attention patterns.
+            </p>
+        </div>
+        <div class="publication-image">
+            <img src="static/figures/analysis.png" alt="Analysis showing entropy collapse and degraded Q-value landscapes in larger transformers.">
+            <p class="caption">
+                <strong>Scaling transformers for value functions results in entropy collapse and worse performance.</strong>
+                Left: Success rate and attention entropy across model sizes. Right: Q-value landscapes and attention maps for the smallest (0.4M) and largest (26M) models. The larger transformer learns highly non-smooth value surfaces with high-frequency oscillations absent in smaller models.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <hr>
+    </div>
+</section>
+
+<!-- Scaling Results -->
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <h2 class="title is-3">Scaling Results</h2>
+        <div class="content has-text-justified">
+            <p>
+                We compare TQL against representative methods across critic sizes from 0.4M to 26M parameters. Across all generative model backbones (MLP, flow-matching, transformer), prior methods scale poorly with additional capacity. In contrast, TQL mitigates the attention collapse failure mode and achieves stable, consistent scaling with up to 43% performance improvement from smallest to largest model.
+            </p>
+        </div>
+        <div class="publication-image">
+            <img src="static/figures/scaling_raw.png" alt="Scaling results across different model sizes.">
+            <p class="caption">
+                <strong>Scaling results.</strong>
+                Average success rate difference compared to the smallest model (0.4M) for each method. While baselines suffer from performance degradation at larger scales, TQL consistently scales well across all environments.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <hr>
+    </div>
+</section>
+
+<!-- Benchmark Results -->
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <h2 class="title is-3">Benchmark Results</h2>
+        <div class="content has-text-justified">
+            <p>
+                We evaluate TQL on the OGBench benchmark across 25 challenging continuous control tasks spanning five domains. TQL achieves the highest average performance on 4 out of 5 domains and the best average across all 25 tasks, demonstrating consistent improvements over a comprehensive set of offline RL baselines.
+            </p>
+        </div>
+        <div class="publication-image">
+            <img src="static/figures/benchmark.png" alt="OGBench benchmark results.">
+            <p class="caption">
+                <strong>OGBench evaluation results.</strong> TQL achieves the highest average performance on 4 out of 5 domains, as well as the best average performance across all 25 tasks. Bold values indicate performance within 95% of the best result per task.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <hr>
+    </div>
+</section>
+
+<!-- Ablation -->
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <h2 class="title is-3">Ablation Study</h2>
+        <div class="content has-text-justified">
+            <p>
+                We analyze the key components of TQL: (1) entropy guidance prevents attention collapse, (2) automatic tuning toward a target outperforms fixed entropy penalties, and (3) layer-wise and token-wise temperatures allow each layer and the <code style="color: black;">[VALUE]</code> token to independently maintain appropriate entropy levels for stable training.
+            </p>
+        </div>
+        <div class="columns is-centered" style="margin-top: 1rem;">
+            <div class="column" style="flex: 0 0 65%; max-width: 65%;">
+                <div class="publication-image">
+                    <img src="static/figures/ablation.png" alt="Ablation study results.">
+                    <p class="caption"><strong>Component ablation.</strong> Each component contributes to TQL's overall performance.</p>
+                </div>
+            </div>
+            <div class="column" style="flex: 0 0 35%; max-width: 35%;">
+                <div class="publication-image">
+                    <img src="static/figures/ablation_attn.png" alt="Attention maps of ablations.">
+                    <p class="caption"><strong>Attention maps.</strong> TQL achieves the most balanced attention across all tokens.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <hr>
+    </div>
+</section>
+
+<!-- BibTeX -->
+<section class="section compact">
+    <div class="container is-max-desktop">
+        <h2 class="title is-3">BibTeX</h2>
+        <div class="bibtex-box"></div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container is-max-desktop">
+        <div class="content has-text-centered">
+            <p>This website is licensed under a <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC BY-SA 4.0 License</a>.</p>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
